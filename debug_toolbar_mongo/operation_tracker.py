@@ -2,7 +2,7 @@ import functools
 import time
 import inspect
 import os
-import SocketServer
+import socketserver
 
 import django
 from django.conf import settings
@@ -229,14 +229,14 @@ def _tidy_stacktrace(stack):
     """
     Clean up stacktrace and remove all entries that:
     1. Are part of Django (except contrib apps)
-    2. Are part of SocketServer (used by Django's dev server)
+    2. Are part of socketserver (used by Django's dev server)
     3. Are the last entry (which is part of our stacktracing code)
 
     ``stack`` should be a list of frame tuples from ``inspect.stack()``
     """
     django_path = os.path.realpath(os.path.dirname(django.__file__))
     django_path = os.path.normpath(os.path.join(django_path, '..'))
-    socketserver_path = os.path.realpath(os.path.dirname(SocketServer.__file__))
+    socketserver_path = os.path.realpath(os.path.dirname(socketserver.__file__))
     pymongo_path = os.path.realpath(os.path.dirname(pymongo.__file__))
 
     trace = []

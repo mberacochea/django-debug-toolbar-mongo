@@ -2,9 +2,9 @@ from django.template import Template, Context
 from django.template.loader import render_to_string
 from django.utils.safestring import mark_safe
 
-from debug_toolbar.panels import DebugPanel
+from debug_toolbar.panels import Panel
 
-import operation_tracker
+from . import operation_tracker
 
 _NAV_SUBTITLE_TPL = u'''
 {% for o, n, t in operations %}
@@ -16,7 +16,7 @@ _NAV_SUBTITLE_TPL = u'''
 {% endfor %}
 '''
 
-class MongoDebugPanel(DebugPanel):
+class MongoDebugPanel(Panel):
     """Panel that shows information about MongoDB operations.
     """
     name = 'MongoDB'
@@ -24,15 +24,17 @@ class MongoDebugPanel(DebugPanel):
     template = 'mongo-panel.html'
 
     def __init__(self, *args, **kwargs):
-        super(MongoDebugPanel, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         operation_tracker.install_tracker()
 
     def process_request(self, request):
         operation_tracker.reset()
+        return super().process_request(request)
 
     def nav_title(self):
         return 'MongoDB'
 
+    @property
     def nav_subtitle(self):
         fun = lambda x, y: (x, len(y), '%.2f' % sum(z['time'] for z in y))
         ctx = {'operations': [], 'count': 0, 'time': 0}
@@ -61,13 +63,14 @@ class MongoDebugPanel(DebugPanel):
 
         return mark_safe(Template(_NAV_SUBTITLE_TPL).render(Context(ctx)))
 
+    @property
     def title(self):
         return 'MongoDB Operations'
 
     def url(self):
         return ''
 
-    def process_response(self, request, response):
+    def generate_stats(self, request, response):
         self.record_stats({
             'queries': operation_tracker.queries,
             'inserts': operation_tracker.inserts,
